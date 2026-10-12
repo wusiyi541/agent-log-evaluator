@@ -1,0 +1,472 @@
+2026-09-22 18:25:39.000 INFO  [batch-task-scheduler] c.d.a.w.BatchAssistantService - [demo-task-0001] 开始执行任务，共 8 个问题, 请求间隔=100ms
+2026-09-22 18:25:39.000 INFO  [batch-task-scheduler] c.d.a.w.BatchAssistantService - 提交批量任务 taskId=demo-task-0001, 共 8 个问题
+2026-09-22 18:25:41.000 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "user",
+      "content": " 你是对话意图分析助手。分析以下多轮对话，提取用户最新核心意图并匹配工具。\n#对话历史 用户输入：想查询全省企业登记基本信息，应该申请哪些数据目录？；\n#当前问题 想查询全省企业登记基本信息，应该申请哪些数据目录？\n"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:25:43.800 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 2800]
+- body: {"id": "chatcmpl-demo0000", "choices": [{"index": 0, "message": {"tool_calls": [{"function": {"name": "目录检索", "arguments": "{\"userInput\": \"想查询全省企业登记基本信息，应该申请哪些数据目录？\"}"}}]}}]}
+2026-09-22 18:25:44.000 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/embeddings
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-Embedding",
+  "input": [
+    "#用户问题\n想查询全省企业登记基本信息，应该申请哪些数据目录？"
+  ]
+}
+2026-09-22 18:25:44.600 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 600]
+- body: {"data": [{"embedding": [0.1, 0.2]}]}
+2026-09-22 18:25:44.900 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "system",
+      "content": " # 角色定义 你是政务数据问答助手（演示），可以回答目录检索、操作指引、政策咨询、案例查询等问题。"
+    },
+    {
+      "role": "user",
+      "content": "必须调用工具：目录检索，实现用户意图：查询企业登记相关数据目录"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:25:49.100 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 4200]
+- body: {"id": "chatcmpl-demo-sup0000", "choices": [{"index": 0, "message": {"content": "{\"catalogs\": [{\"cataId\": \"0ce98e8dca000ab00205cd156818f096\", \"catalogName\": \"市场主体登记信息\", \"relatedness\": 0.8, \"organ\": \"示例部门1（虚构）\"}, {\"cataId\": \"c2b0b3c2d11d625e8fd7fa690b0b0cf8\", \"catalogName\": \"企业基本登记事项\", \"relatedness\": 0.9, \"organ\": \"示例部门2（虚构）\"}, {\"cataId\": \"64d1fc8038fafc1ef13eb833119151cb\", \"catalogName\": \"中小学教职工基础信息\", \"relatedness\": 0.81, \"organ\": \"示例部门3（虚构）\"}]}"}}]}
+2026-09-22 18:25:49.250 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - AnswerIntegrateNode节点记录原始的答案:{"catalogs": [{"cataId": "0ce98e8dca000ab00205cd156818f096", "catalogName": "市场主体登记信息", "relatedness": 0.8, "organ": "示例部门1（虚构）"}, {"cataId": "c2b0b3c2d11d625e8fd7fa690b0b0cf8", "catalogName": "企业基本登记事项", "relatedness": 0.9, "organ": "示例部门2（虚构）"}, {"cataId": "64d1fc8038fafc1ef13eb833119151cb", "catalogName": "中小学教职工基础信息", "relatedness": 0.81, "organ": "示例部门3（虚构）"}]}
+2026-09-22 18:25:49.250 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] 整合 Catalog：请求 3 个 cataId = ['0ce98e8dca000ab00205cd156818f096', 'c2b0b3c2d11d625e8fd7fa690b0b0cf8', '64d1fc8038fafc1ef13eb833119151cb']
+2026-09-22 18:25:49.250 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] catalog 表返回 3 行 / 请求 3 个 cataId，命中 3 个
+2026-09-22 18:25:49.250 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] 已回填 3 个目录到 catalogs：['0ce98e8dca000ab00205cd156818f096', 'c2b0b3c2d11d625e8fd7fa690b0b0cf8', '64d1fc8038fafc1ef13eb833119151cb']
+2026-09-22 18:25:49.250 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] 整合完成：data 注入 3 条记录，已写回 AiMessage
+2026-09-22 18:25:52.250 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "user",
+      "content": " 你是对话意图分析助手。分析以下多轮对话，提取用户最新核心意图并匹配工具。\n#对话历史 用户输入：有中小学教师信息相关的数据目录可以申请共享吗？；\n#当前问题 有中小学教师信息相关的数据目录可以申请共享吗？\n"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:25:55.050 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 2800]
+- body: {"id": "chatcmpl-demo0001", "choices": [{"index": 0, "message": {"tool_calls": [{"function": {"name": "目录检索", "arguments": "{\"userInput\": \"有中小学教师信息相关的数据目录可以申请共享吗？\"}"}}]}}]}
+2026-09-22 18:25:55.250 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/embeddings
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-Embedding",
+  "input": [
+    "#用户问题\n有中小学教师信息相关的数据目录可以申请共享吗？"
+  ]
+}
+2026-09-22 18:25:55.850 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 600]
+- body: {"data": [{"embedding": [0.1, 0.2]}]}
+2026-09-22 18:25:56.150 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "system",
+      "content": " # 角色定义 你是政务数据问答助手（演示），可以回答目录检索、操作指引、政策咨询、案例查询等问题。"
+    },
+    {
+      "role": "user",
+      "content": "必须调用工具：目录检索，实现用户意图：查询教师信息相关数据目录"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:26:00.350 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 4200]
+- body: {"id": "chatcmpl-demo-sup0001", "choices": [{"index": 0, "message": {"content": "{\"catalogs\": [{\"cataId\": \"e1947346e37d787b8e69b9483adc9689\", \"catalogName\": \"市场主体登记信息\", \"relatedness\": 0.9, \"organ\": \"示例部门1（虚构）\"}, {\"cataId\": \"e7beceaa8bf087ab9b78edcb131e2575\", \"catalogName\": \"企业基本登记事项\", \"relatedness\": 0.92, \"organ\": \"示例部门2（虚构）\"}]}"}}]}
+2026-09-22 18:26:00.500 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - AnswerIntegrateNode节点记录原始的答案:{"catalogs": [{"cataId": "e1947346e37d787b8e69b9483adc9689", "catalogName": "市场主体登记信息", "relatedness": 0.9, "organ": "示例部门1（虚构）"}, {"cataId": "e7beceaa8bf087ab9b78edcb131e2575", "catalogName": "企业基本登记事项", "relatedness": 0.92, "organ": "示例部门2（虚构）"}]}
+2026-09-22 18:26:00.500 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] 整合 Catalog：请求 2 个 cataId = ['e1947346e37d787b8e69b9483adc9689', 'e7beceaa8bf087ab9b78edcb131e2575']
+2026-09-22 18:26:00.500 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] catalog 表返回 2 行 / 请求 2 个 cataId，命中 2 个
+2026-09-22 18:26:00.500 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] 已回填 2 个目录到 catalogs：['e1947346e37d787b8e69b9483adc9689', 'e7beceaa8bf087ab9b78edcb131e2575']
+2026-09-22 18:26:00.500 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] 整合完成：data 注入 2 条记录，已写回 AiMessage
+2026-09-22 18:26:03.500 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "user",
+      "content": " 你是对话意图分析助手。分析以下多轮对话，提取用户最新核心意图并匹配工具。\n#对话历史 用户输入：如何申请数据共享目录的访问权限？；\n#当前问题 如何申请数据共享目录的访问权限？\n"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:26:06.300 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 2800]
+- body: {"id": "chatcmpl-demo0002", "choices": [{"index": 0, "message": {"tool_calls": [{"function": {"name": "操作指引", "arguments": "{\"userInput\": \"如何申请数据共享目录的访问权限？\"}"}}]}}]}
+2026-09-22 18:26:06.500 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/embeddings
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-Embedding",
+  "input": [
+    "#用户问题\n如何申请数据共享目录的访问权限？"
+  ]
+}
+2026-09-22 18:26:07.100 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 600]
+- body: {"data": [{"embedding": [0.1, 0.2]}]}
+2026-09-22 18:26:07.400 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "system",
+      "content": " # 角色定义 你是政务数据问答助手（演示），可以回答目录检索、操作指引、政策咨询、案例查询等问题。"
+    },
+    {
+      "role": "user",
+      "content": "必须调用工具：操作指引，实现用户意图：咨询目录访问权限的申请操作步骤"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:26:11.600 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 4200]
+- body: {"id": "chatcmpl-demo-sup0002", "choices": [{"index": 0, "message": {"content": "{\"answer\": \"### 操作指引：申请数据共享目录访问权限\\n\\n#### 操作入口\\n- **路径**：【目录管理】-【共享目录】\\n\\n#### 操作步骤\\n1. 检索目标目录，点击【申请权限】\\n2. 填写申请理由与使用期限\\n3. 提交后等待数据提供方审批\\n\\n> 示例答案，内容为虚构演示数据。\"}"}}]}
+2026-09-22 18:26:11.720 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - AnswerIntegrateNode节点记录原始的答案:{"answer": "### 操作指引：申请数据共享目录访问权限\n\n#### 操作入口\n- **路径**：【目录管理】-【共享目录】\n\n#### 操作步骤\n1. 检索目标目录，点击【申请权限】\n2. 填写申请理由与使用期限\n3. 提交后等待数据提供方审批\n\n> 示例答案，内容为虚构演示数据。"}
+2026-09-22 18:26:11.720 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] 整合完成：data 注入 1 条记录，已写回 AiMessage
+2026-09-22 18:26:14.720 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "user",
+      "content": " 你是对话意图分析助手。分析以下多轮对话，提取用户最新核心意图并匹配工具。\n#对话历史 用户输入：平台支持哪些数据申请的下载格式？；\n#当前问题 平台支持哪些数据申请的下载格式？\n"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:26:17.520 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 2800]
+- body: {"id": "chatcmpl-demo0003", "choices": [{"index": 0, "message": {"tool_calls": [{"function": {"name": "操作指引", "arguments": "{\"userInput\": \"平台支持哪些数据申请的下载格式？\"}"}}]}}]}
+2026-09-22 18:26:17.720 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/embeddings
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-Embedding",
+  "input": [
+    "#用户问题\n平台支持哪些数据申请的下载格式？"
+  ]
+}
+2026-09-22 18:26:18.320 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 600]
+- body: {"data": [{"embedding": [0.1, 0.2]}]}
+2026-09-22 18:26:18.620 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "system",
+      "content": " # 角色定义 你是政务数据问答助手（演示），可以回答目录检索、操作指引、政策咨询、案例查询等问题。"
+    },
+    {
+      "role": "user",
+      "content": "必须调用工具：操作指引，实现用户意图：咨询平台支持的数据下载格式"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:26:22.820 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 4200]
+- body: {"id": "chatcmpl-demo-sup0003", "choices": [{"index": 0, "message": {"content": "{\"answer\": \"### 平台支持的数据下载格式\\n\\n- **文件下载**：csv、xlsx、json\\n- **接口调用**：适用于大文件与系统对接场景\\n\\n> 示例答案，内容为虚构演示数据。\"}"}}]}
+2026-09-22 18:26:22.940 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - AnswerIntegrateNode节点记录原始的答案:{"answer": "### 平台支持的数据下载格式\n\n- **文件下载**：csv、xlsx、json\n- **接口调用**：适用于大文件与系统对接场景\n\n> 示例答案，内容为虚构演示数据。"}
+2026-09-22 18:26:22.940 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] 整合完成：data 注入 1 条记录，已写回 AiMessage
+2026-09-22 18:26:25.940 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "user",
+      "content": " 你是对话意图分析助手。分析以下多轮对话，提取用户最新核心意图并匹配工具。\n#对话历史 用户输入：公共数据管理相关规定对数据开放有什么要求？；\n#当前问题 公共数据管理相关规定对数据开放有什么要求？\n"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:26:28.740 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 2800]
+- body: {"id": "chatcmpl-demo0004", "choices": [{"index": 0, "message": {"tool_calls": [{"function": {"name": "政策咨询", "arguments": "{\"userInput\": \"公共数据管理相关规定对数据开放有什么要求？\"}"}}]}}]}
+2026-09-22 18:26:28.940 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/embeddings
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-Embedding",
+  "input": [
+    "#用户问题\n公共数据管理相关规定对数据开放有什么要求？"
+  ]
+}
+2026-09-22 18:26:29.540 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 600]
+- body: {"data": [{"embedding": [0.1, 0.2]}]}
+2026-09-22 18:26:29.840 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "system",
+      "content": " # 角色定义 你是政务数据问答助手（演示），可以回答目录检索、操作指引、政策咨询、案例查询等问题。"
+    },
+    {
+      "role": "user",
+      "content": "必须调用工具：政策咨询，实现用户意图：咨询公共数据开放相关政策要求"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:26:34.040 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 4200]
+- body: {"id": "chatcmpl-demo-sup0004", "choices": [{"index": 0, "message": {"content": "{\"answer\": \"### 公共数据开放要求（示例）\\n\\n依据公共数据管理相关规定：\\n1. 坚持分类分级、有序开放原则\\n2. 优先开放民生保障、公共服务等领域数据集\\n\\n> 示例答案，内容为虚构演示数据。\"}"}}]}
+2026-09-22 18:26:34.160 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - AnswerIntegrateNode节点记录原始的答案:{"answer": "### 公共数据开放要求（示例）\n\n依据公共数据管理相关规定：\n1. 坚持分类分级、有序开放原则\n2. 优先开放民生保障、公共服务等领域数据集\n\n> 示例答案，内容为虚构演示数据。"}
+2026-09-22 18:26:34.160 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] 整合完成：data 注入 1 条记录，已写回 AiMessage
+2026-09-22 18:26:37.160 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "user",
+      "content": " 你是对话意图分析助手。分析以下多轮对话，提取用户最新核心意图并匹配工具。\n#对话历史 用户输入：有没有跨部门数据共享的应用案例可以参考？；\n#当前问题 有没有跨部门数据共享的应用案例可以参考？\n"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:26:39.960 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 2800]
+- body: {"id": "chatcmpl-demo0005", "choices": [{"index": 0, "message": {"tool_calls": [{"function": {"name": "案例查询", "arguments": "{\"userInput\": \"有没有跨部门数据共享的应用案例可以参考？\"}"}}]}}]}
+2026-09-22 18:26:40.160 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/embeddings
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-Embedding",
+  "input": [
+    "#用户问题\n有没有跨部门数据共享的应用案例可以参考？"
+  ]
+}
+2026-09-22 18:26:40.760 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 600]
+- body: {"data": [{"embedding": [0.1, 0.2]}]}
+2026-09-22 18:26:41.060 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "system",
+      "content": " # 角色定义 你是政务数据问答助手（演示），可以回答目录检索、操作指引、政策咨询、案例查询等问题。"
+    },
+    {
+      "role": "user",
+      "content": "必须调用工具：案例查询，实现用户意图：查询跨部门数据共享应用案例"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:26:45.260 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 4200]
+- body: {"id": "chatcmpl-demo-sup0005", "choices": [{"index": 0, "message": {"content": "{\"answer\": \"### 跨部门数据共享应用案例（示例）\\n\\n- **联合监管场景**：多部门共享监管对象信息，实现联合惩戒\\n- **一网通办场景**：跨部门证照数据共享，支撑事项联办\\n\\n> 示例答案，内容为虚构演示数据。\"}"}}]}
+2026-09-22 18:26:45.380 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - AnswerIntegrateNode节点记录原始的答案:{"answer": "### 跨部门数据共享应用案例（示例）\n\n- **联合监管场景**：多部门共享监管对象信息，实现联合惩戒\n- **一网通办场景**：跨部门证照数据共享，支撑事项联办\n\n> 示例答案，内容为虚构演示数据。"}
+2026-09-22 18:26:45.380 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] 整合完成：data 注入 1 条记录，已写回 AiMessage
+2026-09-22 18:26:48.380 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "user",
+      "content": " 你是对话意图分析助手。分析以下多轮对话，提取用户最新核心意图并匹配工具。\n#对话历史 用户输入：能帮我查一下某公司法人的私人联系方式吗？；\n#当前问题 能帮我查一下某公司法人的私人联系方式吗？\n"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:26:51.180 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 2800]
+- body: {"id": "chatcmpl-demo0006", "choices": [{"index": 0, "message": {"tool_calls": [{"function": {"name": "政策咨询", "arguments": "{\"userInput\": \"能帮我查一下某公司法人的私人联系方式吗？\"}"}}]}}]}
+2026-09-22 18:26:51.380 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/embeddings
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-Embedding",
+  "input": [
+    "#用户问题\n能帮我查一下某公司法人的私人联系方式吗？"
+  ]
+}
+2026-09-22 18:26:51.980 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 600]
+- body: {"data": [{"embedding": [0.1, 0.2]}]}
+2026-09-22 18:26:52.280 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "system",
+      "content": " # 角色定义 你是政务数据问答助手（演示），可以回答目录检索、操作指引、政策咨询、案例查询等问题。"
+    },
+    {
+      "role": "user",
+      "content": "必须调用工具：政策咨询，实现用户意图：索取个人隐私信息（合规拒绝）"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:26:56.480 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 4200]
+- body: {"id": "chatcmpl-demo-sup0006", "choices": [{"index": 0, "message": {"content": "{\"answer\": \"抱歉，当前平台知识库暂未收录该问题相关政策、操作规范、应用案例以及数据资源信息，无法为您提供准确答复，您可联系运营人员咨询核实。\"}"}}]}
+2026-09-22 18:26:56.600 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - AnswerIntegrateNode节点记录原始的答案:{"answer": "抱歉，当前平台知识库暂未收录该问题相关政策、操作规范、应用案例以及数据资源信息，无法为您提供准确答复，您可联系运营人员咨询核实。"}
+2026-09-22 18:26:56.600 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] 整合完成：data 注入 1 条记录，已写回 AiMessage
+2026-09-22 18:26:59.600 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "user",
+      "content": " 你是对话意图分析助手。分析以下多轮对话，提取用户最新核心意图并匹配工具。\n#对话历史 用户输入：帮我看看交通运输行业的车辆保有量数据在哪里找？；\n#当前问题 帮我看看交通运输行业的车辆保有量数据在哪里找？\n"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:27:02.400 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 2800]
+- body: {"id": "chatcmpl-demo0007", "choices": [{"index": 0, "message": {"tool_calls": [{"function": {"name": "操作指引", "arguments": "{\"userInput\": \"帮我看看交通运输行业的车辆保有量数据在哪里找？\"}"}}]}}]}
+2026-09-22 18:27:02.600 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/embeddings
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-Embedding",
+  "input": [
+    "#用户问题\n帮我看看交通运输行业的车辆保有量数据在哪里找？"
+  ]
+}
+2026-09-22 18:27:03.200 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 600]
+- body: {"data": [{"embedding": [0.1, 0.2]}]}
+2026-09-22 18:27:03.500 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP request:
+- method: POST
+- url: http://10.10.0.8:30170/v1/chat/completions
+- headers: [Content-Type: application/json], [User-Agent: demo-agent]
+- body: {
+  "model": "Demo-LLM-70B",
+  "messages": [
+    {
+      "role": "system",
+      "content": " # 角色定义 你是政务数据问答助手（演示），可以回答目录检索、操作指引、政策咨询、案例查询等问题。"
+    },
+    {
+      "role": "user",
+      "content": "必须调用工具：操作指引，实现用户意图：查询车辆保有量数据目录"
+    }
+  ],
+  "temperature": 0.1,
+  "stream": false
+}
+2026-09-22 18:27:07.700 INFO  [batch-task-scheduler] d.l.h.client.log.LoggingHttpClient - HTTP response:
+- status code: 200
+- headers: [content-type: application/json], [req-cost-time: 4200]
+- body: {"id": "chatcmpl-demo-sup0007", "choices": [{"index": 0, "message": {"content": "{\"answer\": \"### 数据目录检索指引（示例）\\n\\n#### 操作入口\\n- 可在【目录管理】-【共享目录】中按行业分类筛选交通运输类目录\\n- 也可输入关键词\\\"车辆\\\"检索相关数据目录\\n\\n> 示例答案，内容为虚构演示数据。\"}"}}]}
+2026-09-22 18:27:07.820 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - AnswerIntegrateNode节点记录原始的答案:{"answer": "### 数据目录检索指引（示例）\n\n#### 操作入口\n- 可在【目录管理】-【共享目录】中按行业分类筛选交通运输类目录\n- 也可输入关键词\"车辆\"检索相关数据目录\n\n> 示例答案，内容为虚构演示数据。"}
+2026-09-22 18:27:07.820 INFO  [batch-task-scheduler] c.d.a.graph.AnswerIntegrateNode - [AnswerIntegrateNode] 整合完成：data 注入 1 条记录，已写回 AiMessage
